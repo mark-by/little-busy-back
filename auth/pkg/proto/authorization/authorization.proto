@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package authorization;
+
+option go_package = "github.com/mark-by/little-busy-back/auth/pkg/proto/authorization";
+
+service authorizationService {
+  rpc Create(UserID) returns (Session) {}
+  rpc Check(SessionID) returns (UserID) {}
+  rpc Delete(SessionID) returns (Empty) {}
+}
+
+message SessionID {
+  string ID = 1;
+}
+
+message Session {
+  string ID = 1;
+  int64 ExpirationDate = 2;
+}
+
+message UserID {
+  int64 ID = 1;
+}
+
+message Empty {}
