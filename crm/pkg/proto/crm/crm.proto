@@ -1,0 +1,53 @@
+syntax = "proto3";
+
+package crm;
+
+option go_package = "github.com/mark-by/little-busy-back/crm/pkg/proto/crm";
+
+service CrmService {
+  rpc GetUserByID(User) returns (User) {}
+  rpc CreateUser(Credentials) returns (User) {}
+  rpc CheckCredentials(Credentials) returns (User) {}
+  rpc CreateCustomer(Customer) returns (Customer) {}
+  rpc DeleteCustomer(CustomerID) returns (Empty) {}
+  rpc SearchCustomer(SearchFilter) returns (Customers) {}
+  rpc GetCustomer(CustomerID) returns (Customer) {}
+  rpc GetCustomers(CustomersRequest) returns (Customers) {}
+  rpc UpdateCustomer(Customer) returns (Empty) {}
+}
+
+message SearchFilter {
+  string SearchText = 1;
+  string Since = 2;
+  int32 Limit = 3;
+}
+
+message CustomersRequest {
+  repeated int64 Ids = 1;
+}
+
+message Customers {
+  repeated Customer Customers = 1;
+}
+
+message CustomerID {
+  int64 ID = 1;
+}
+
+message Customer {
+  int64 ID = 1;
+  string Name = 2;
+  string Tel = 3;
+}
+
+message Credentials {
+  string Username = 1;
+  string Password = 2;
+}
+
+message User {
+  int64 ID = 1;
+  string Username = 2;
+}
+
+message Empty {}

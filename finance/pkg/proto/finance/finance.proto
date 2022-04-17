@@ -1,0 +1,49 @@
+syntax = "proto3";
+
+package finance;
+
+option go_package = "github.com/mark-by/little-busy-back/finance/pkg/proto/finance";
+
+service FinanceService {
+  rpc Create(Record) returns (Empty);
+  rpc GetRecordsForDay(DateRequest) returns (Records);
+
+  rpc ProfitForMonth(DateRequest) returns (Profit);
+  rpc GetValuesForMonth(DateRequest) returns (Values);
+  rpc GetValuesForYear(DateRequest) returns (Values);
+}
+
+message Empty {};
+
+message DateRequest {
+  int32 Year = 1;
+  int32 Month = 2;
+  int32 Day = 3;
+}
+
+message Profit {
+  float Value = 1;
+}
+
+message Record {
+  int64 ClientID = 2;
+  int64 EventID = 3;
+  string Type = 4;
+  float Value = 5;
+  string DateTime = 6;
+  string Description = 7;
+}
+
+message Records {
+  repeated Record Records = 1;
+}
+
+message Values {
+  repeated Value Values = 1;
+}
+
+message Value {
+  float Income = 1;
+  float Cost = 2;
+  string DateTime = 3;
+}

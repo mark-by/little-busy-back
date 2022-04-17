@@ -1,0 +1,1 @@
+alter table customers drop constraint unique_tel;

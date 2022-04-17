@@ -1,0 +1,1 @@
+alter table customers alter column tel set not null;
