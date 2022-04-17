@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"github.com/georgysavva/scany/pgxscan"
 	"github.com/jackc/pgx/v4/pgxpool"
-	"github.com/mark-by/little-busy-back/crm/internal/domain/entity"
-	"github.com/mark-by/little-busy-back/crm/internal/domain/repository"
+	"github.com/mark-by/little-busy-back/api/internal/domain/entity"
+	"github.com/mark-by/little-busy-back/api/internal/domain/repository"
 	"github.com/mark-by/little-busy-back/pkg/utils"
 	"github.com/pkg/errors"
 	"strings"
@@ -34,7 +34,7 @@ func (c Customers) GetCustomers(ids []int64) ([]entity.Customer, error) {
 	return customers, nil
 }
 
-func (c Customers) Update(customer *entity.Customer) error {
+func (c Customers) UpdateCustomer(customer *entity.Customer) error {
 	_, err := c.db.Exec(context.Background(),
 		"update customers set name = $1, tel = $2 where id = $3", customer.Name, customer.Tel, customer.ID)
 	if err != nil {
@@ -43,7 +43,7 @@ func (c Customers) Update(customer *entity.Customer) error {
 	return nil
 }
 
-func (c Customers) GetCustomer(customerID int64) (*entity.Customer, error) {
+func (c Customers) GetByID(customerID int64) (*entity.Customer, error) {
 	customer := entity.Customer{
 		ID: customerID,
 	}
@@ -116,4 +116,4 @@ func NewCustomers(db *pgxpool.Pool) *Customers {
 	return &Customers{db}
 }
 
-var _ repository.Customer = &Customers{}
+var _ repository.Customers = &Customers{}

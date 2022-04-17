@@ -7,6 +7,6 @@ type Customers interface {
 	GetCustomers(ids []int64) ([]entity.Customer, error)
 	CreateCustomer(customer *entity.Customer) (*entity.Customer, error)
 	DeleteCustomer(id int64) error
-	SearchCustomer(searchText, since string, limit int) ([]entity.Customer, error)
+	SearchCustomers(searchText, searchField, since string, limit int) ([]entity.Customer, error)
 	UpdateCustomer(customer *entity.Customer) error
 }

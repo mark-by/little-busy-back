@@ -1,1 +1,0 @@
-alter table customers add constraint unique_tel unique (tel);

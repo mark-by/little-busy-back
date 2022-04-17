@@ -1,1 +1,0 @@
-alter table customers alter column tel drop not null;

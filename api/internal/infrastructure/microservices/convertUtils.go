@@ -2,7 +2,6 @@ package microservices
 
 import (
 	"github.com/mark-by/little-busy-back/api/internal/domain/entity"
-	"github.com/mark-by/little-busy-back/crm/pkg/proto/crm"
 	"github.com/mark-by/little-busy-back/scheduler/pkg/proto/scheduler"
 	"time"
 )
@@ -51,30 +50,6 @@ func convertEvents(events []entity.Event) *scheduler.Events {
 	return protoEvents
 }
 
-func convertCustomer(customer *entity.Customer) *crm.Customer {
-	return &crm.Customer{
-		ID:   customer.ID,
-		Name: customer.Name,
-		Tel:  customer.Tel,
-	}
-}
-
-func convertProtoCustomer(customer *crm.Customer) *entity.Customer {
-	return &entity.Customer{
-		ID:   customer.ID,
-		Name: customer.Name,
-		Tel:  customer.Tel,
-	}
-}
-
-func convertProtoCustomers(customers []*crm.Customer) []entity.Customer {
-	newCustomers := make([]entity.Customer, 0, len(customers))
-	for _, customer := range customers {
-		newCustomers = append(newCustomers, *convertProtoCustomer(customer))
-	}
-	return newCustomers
-}
-
 func convertProtoEvents(protoEvents *scheduler.Events) []entity.Event {
 	if protoEvents == nil {
 		return nil
@@ -87,27 +62,3 @@ func convertProtoEvents(protoEvents *scheduler.Events) []entity.Event {
 
 	return events
 }
-
-//func convertRecord(record *entity.Record) *finance.Record {
-//	return &finance.Record{
-//		ClientID:    record.ClientID,
-//		EventID:     record.EventID,
-//		Type:        record.Type,
-//		Value:       record.Value,
-//		DateTime:    record.DateTime.Format(time.RFC3339),
-//		Description: record.Description,
-//	}
-//}
-//
-//func convertRecord(record *entity.Record) *finance.Record {
-//	return &finance.Record{
-//		ClientID:    record.ClientID,
-//		EventID:     record.EventID,
-//		Type:        record.Type,
-//		Value:       record.Value,
-//		DateTime:    record.DateTime.Format(time.RFC3339),
-//		Description: record.Description,
-//	}
-//}
-//
-//func convertRecords()

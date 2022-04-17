@@ -6,8 +6,8 @@ import (
 	"github.com/georgysavva/scany/pgxscan"
 	"github.com/jackc/pgx"
 	"github.com/jackc/pgx/v4/pgxpool"
-	"github.com/mark-by/little-busy-back/crm/internal/domain/entity"
-	"github.com/mark-by/little-busy-back/crm/internal/domain/repository"
+	"github.com/mark-by/little-busy-back/api/internal/domain/entity"
+	"github.com/mark-by/little-busy-back/api/internal/domain/repository"
 	"go.uber.org/zap"
 	"log"
 )
@@ -38,7 +38,7 @@ func (u User) GetByID(id int) (*entity.User, error) {
 	return &user, nil
 }
 
-func (u User) Get(username string) (*entity.User, error) {
+func (u User) GetByUsername(username string) (*entity.User, error) {
 	var user entity.User
 	err := pgxscan.Get(context.Background(), u.db, &user,
 		"select id, username, password from users where username = $1", username)

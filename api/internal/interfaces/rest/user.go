@@ -52,6 +52,12 @@ func (s Server) deleteAuthCookie() *http.Cookie {
 }
 
 func (s Server) signUp(c echo.Context) error {
+	secret := c.Request().Header.Get("Authorization")
+
+	if secret != s.config.Secret {
+		return echo.NewHTTPError(http.StatusUnauthorized)
+	}
+
 	user := new(entity.User)
 
 	if err := s.bindAndValidate(c, user); err != nil {

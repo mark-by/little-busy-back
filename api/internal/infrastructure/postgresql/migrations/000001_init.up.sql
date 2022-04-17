@@ -7,5 +7,5 @@ create table users (
 create table customers (
     id serial primary key,
     name varchar(32) not null,
-    tel varchar(10) not null
+    tel varchar(10) unique
 );

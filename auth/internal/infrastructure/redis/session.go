@@ -7,7 +7,6 @@ import (
 	"github.com/mark-by/little-busy-back/auth/internal/domain/repository"
 	"github.com/pkg/errors"
 	"log"
-	"time"
 )
 
 type Options struct {
@@ -21,11 +20,11 @@ type Session struct {
 }
 
 func NewSession(options *Options) *Session {
-	return &Session{
+	session := &Session{
 		connPool: &redis.Pool{
 			Dial: func() (redis.Conn, error) {
-				conn, err := redis.DialURL(fmt.Sprintf("redis://%s:%s:%s",
-					options.User,
+				conn, err := redis.DialURL(fmt.Sprintf("redis://%s:%s",
+					//options.User,
 					options.Host,
 					options.Port))
 				if err != nil {
@@ -37,6 +36,10 @@ func NewSession(options *Options) *Session {
 			MaxActive: 12000,
 		},
 	}
+
+	session.connPool.Get().Do("GET", "ping")
+
+	return session
 }
 
 func (s Session) Get(sessionID string) (*entity.Session, error) {
@@ -72,12 +75,7 @@ func (s Session) Create(session *entity.Session) error {
 	conn := s.connPool.Get()
 	defer conn.Close()
 
-	expirationTime := session.Expiration.Sub(time.Now()).Seconds()
-	if expirationTime <= 0 {
-		return errors.New("wrong expiration time")
-	}
-
-	reply, err := redis.String(conn.Do("SET", s.sessionKey(session.ID), session.UserID, "EX", expirationTime))
+	reply, err := redis.String(conn.Do("SET", s.sessionKey(session.ID), session.UserID))
 	if err != nil {
 		return errors.Wrap(err, "fail to set authorization in redis")
 	}

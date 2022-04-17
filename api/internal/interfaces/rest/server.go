@@ -6,6 +6,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/mark-by/little-busy-back/api/internal/application"
+	"github.com/mark-by/little-busy-back/api/internal/config"
 	"go.uber.org/zap"
 	"net/http"
 )
@@ -27,12 +28,8 @@ type Server struct {
 	userApp     application.UserI
 	authApp     application.AuthorizationI
 	customerApp application.CustomersI
-	config      *ServerConfig
+	config      *config.Config
 	formDecoder *form.Decoder
-}
-
-type ServerConfig struct {
-	Address string
 }
 
 type ServerOptions struct {
@@ -41,7 +38,7 @@ type ServerOptions struct {
 	EventsApp   application.EventsI
 	CustomerApp application.CustomersI
 	Logger      *zap.SugaredLogger
-	Config      *ServerConfig
+	Config      *config.Config
 }
 
 func NewServer(options *ServerOptions) *Server {

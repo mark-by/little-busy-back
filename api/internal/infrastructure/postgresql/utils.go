@@ -2,7 +2,7 @@ package postgresql
 
 import (
 	"github.com/jackc/pgconn"
-	"github.com/mark-by/little-busy-back/crm/internal/domain/entity"
+	"github.com/mark-by/little-busy-back/api/internal/domain/entity"
 	"github.com/pkg/errors"
 )
 

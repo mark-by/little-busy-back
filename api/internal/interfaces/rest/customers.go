@@ -52,6 +52,10 @@ func (s Server) searchCustomer(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "")
 	}
 
+	if len(customers) == 0 {
+		return c.NoContent(http.StatusNoContent)
+	}
+
 	return c.JSON(http.StatusOK, customers)
 }
 
@@ -63,7 +67,8 @@ func (s Server) deleteCustomer(c echo.Context) error {
 
 	err = s.customerApp.Delete(int64(customerID))
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "")
+		s.logger.Error(err)
+		return echo.NewHTTPError(http.StatusInternalServerError)
 	}
 
 	return nil

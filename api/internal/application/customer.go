@@ -3,6 +3,7 @@ package application
 import (
 	"github.com/mark-by/little-busy-back/api/internal/domain/entity"
 	"github.com/mark-by/little-busy-back/api/internal/domain/repository"
+	"strings"
 )
 
 type CustomersI interface {
@@ -27,7 +28,24 @@ func (c Customers) Get(id int64) (*entity.Customer, error) {
 }
 
 func (c Customers) Search(searchText, since string, limit int) ([]entity.Customer, error) {
-	return c.customers.SearchCustomer(searchText, since, limit)
+	if limit == 0 {
+		limit = 10
+	}
+	if limit > 50 {
+		limit = 50
+	}
+
+	searchField := "name"
+	if strings.HasPrefix(searchText, "+7") || strings.HasPrefix(searchText, "8") {
+		searchText = strings.TrimPrefix(searchText, "+7")
+		searchText = strings.TrimPrefix(searchText, "8")
+		searchField = "tel"
+	}
+	if strings.HasPrefix(searchText, "9") {
+		searchField = "tel"
+	}
+
+	return c.customers.SearchCustomers(searchText, searchField, since, limit)
 }
 
 func (c Customers) Delete(id int64) error {
