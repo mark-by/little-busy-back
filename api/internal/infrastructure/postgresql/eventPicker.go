@@ -1,6 +1,6 @@
 package postgresql
 
-import "github.com/mark-by/little-busy-back/scheduler/internal/domain/entity"
+import "github.com/mark-by/little-busy-back/api/internal/domain/entity"
 
 type eventPicker struct {
 	weekDays map[int][]entity.Event

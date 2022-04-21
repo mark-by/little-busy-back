@@ -173,7 +173,7 @@ type Record struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	ClientID    int64   `protobuf:"varint,2,opt,name=ClientID,proto3" json:"ClientID,omitempty"`
+	ClientID    int64   `protobuf:"varint,2,opt,name=CustomerID,proto3" json:"CustomerID,omitempty"`
 	EventID     int64   `protobuf:"varint,3,opt,name=EventID,proto3" json:"EventID,omitempty"`
 	Type        string  `protobuf:"bytes,4,opt,name=Type,proto3" json:"Type,omitempty"`
 	Value       float32 `protobuf:"fixed32,5,opt,name=Value,proto3" json:"Value,omitempty"`

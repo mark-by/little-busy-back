@@ -2,8 +2,8 @@ package main
 
 import (
 	"github.com/ClickHouse/clickhouse-go/v2"
+	"github.com/mark-by/little-busy-back/api/internal/infrastructure/postgresql"
 	"github.com/mark-by/little-busy-back/finance/internal/application"
-	clickhouseRepo "github.com/mark-by/little-busy-back/finance/internal/infrastructure/clickhouse"
 	"github.com/mark-by/little-busy-back/finance/internal/interfaces/grpc"
 	"github.com/mark-by/little-busy-back/pkg/utils"
 	"go.uber.org/zap"
@@ -53,8 +53,8 @@ func main() {
 
 	conn := initDB(logger.Sugar())
 
-	recordsRepository := clickhouseRepo.NewRecord(conn)
-	valuesRepository := clickhouseRepo.NewValue(conn)
+	recordsRepository := postgresql.NewRecord(conn)
+	valuesRepository := postgresql.NewValue(conn)
 
 	recordsApp := application.NewRecord(recordsRepository)
 	valuesApp := application.NewValue(valuesRepository)

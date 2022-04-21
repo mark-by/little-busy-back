@@ -3,10 +3,10 @@ package entity
 import "time"
 
 type Record struct {
-	ClientID    int64
-	EventID     int64
-	Type        string
+	CustomerID  *int64
+	EventID     *int64
+	IsIncome    bool
 	Value       float32
 	DateTime    time.Time
-	Description string
+	Description *string
 }

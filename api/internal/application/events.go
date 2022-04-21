@@ -1,8 +1,10 @@
 package application
 
 import (
+	"fmt"
 	"github.com/mark-by/little-busy-back/api/internal/domain/entity"
 	"github.com/mark-by/little-busy-back/api/internal/domain/repository"
+	"github.com/pkg/errors"
 	"time"
 )
 
@@ -29,36 +31,15 @@ func (e Events) DeleteAllForCustomer(customerID int64) error {
 }
 
 func (e Events) Get(eventID int64) (*entity.Event, error) {
-	event, err := e.repoEvents.Get(eventID)
-	if err != nil {
-		return nil, err
-	}
-
-	customers, err := e.repoCustomers.GetCustomers([]int64{event.CustomerID})
-	if err != nil {
-		return nil, err
-	}
-
-	if len(customers) > 0 {
-		event.Customer = &customers[0]
-	}
-	return event, nil
+	return e.repoEvents.Get(eventID)
 }
 
 func (e Events) GetForMonth(year, month int) ([]entity.Event, error) {
-	events, err := e.repoEvents.GetForMonth(year, month)
-	if err != nil {
-		return nil, err
-	}
-	return e.addCustomers(events)
+	return e.repoEvents.GetForMonth(year, month)
 }
 
 func (e Events) GetForDay(year, month, day int) ([]entity.Event, error) {
-	events, err := e.repoEvents.GetForDay(year, month, day)
-	if err != nil {
-		return nil, err
-	}
-	return e.addCustomers(events)
+	return e.repoEvents.GetForDay(year, month, day)
 }
 
 func (e Events) GetNotPaidForDay(year, month, day int) ([]entity.Event, error) {
@@ -96,11 +77,71 @@ func (e Events) Create(event *entity.Event) (*entity.Event, error) {
 }
 
 func (e Events) Update(event *entity.Event, currStartTime time.Time, withNext bool) error {
-	return e.repoEvents.Update(event, currStartTime, withNext)
+	oldEvent, err := e.repoEvents.Get(event.ID)
+	if err != nil {
+		return err
+	}
+
+	if !oldEvent.IsRecurring {
+		// не был повторяющимся
+		return e.repoEvents.UpdateRegular(event)
+	}
+
+	if oldEvent.IsRecurring && !event.IsRecurring {
+		// перестал быть повторяющимся
+		err = e.repoEvents.DeleteWithNextRecurring(event, currStartTime)
+		if err != nil {
+			return err
+		}
+		_, err = e.repoEvents.Create(event)
+		return err
+	}
+
+	if oldEvent.IsRecurring && event.IsRecurring {
+		// повторяющееся
+		if withNext {
+			if oldEvent.StartTime.Sub(currStartTime) == 0 {
+				// the same event
+				event.IsRecurring = false
+				return e.repoEvents.UpdateRegular(event)
+			}
+			return e.repoEvents.UpdateWithNextRecurring(event, currStartTime)
+		}
+
+		return e.repoEvents.UpdateOnlyCurrRecurring(event, currStartTime)
+	}
+
+	return nil
 }
 
 func (e Events) Delete(eventID int64, currStartTime time.Time, withNext bool) error {
-	return e.repoEvents.Delete(eventID, currStartTime, withNext)
+	event, err := e.repoEvents.Get(eventID)
+	if err != nil {
+		return err
+	}
+	if event == nil {
+		return errors.New(fmt.Sprintf("no such event with id %v", eventID))
+	}
+
+	if event.IsRecurring {
+		// recurring
+		if withNext {
+			return e.repoEvents.DeleteWithNextRecurring(event, currStartTime)
+		}
+		if event.StartTime.Sub(currStartTime) == 0 {
+			// the same event
+			// передвигаем начало повторяющегося событие
+			nextEvent := event.NextRecurring()
+			if nextEvent == nil {
+				return e.repoEvents.DeleteOnlyCurrRecurring(event, currStartTime)
+			}
+			nextEvent.IsRecurring = false // костыль
+			return e.repoEvents.UpdateRegular(nextEvent)
+		}
+		return e.repoEvents.DeleteOnlyCurrRecurring(event, currStartTime)
+	}
+
+	return e.repoEvents.DeleteRegular(eventID)
 }
 
 func NewEvents(events repository.Events, customers repository.Customers) *Events {

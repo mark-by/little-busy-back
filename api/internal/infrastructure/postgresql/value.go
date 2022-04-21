@@ -1,10 +1,10 @@
-package clickhouse
+package postgresql
 
 import (
 	"context"
 	"github.com/ClickHouse/clickhouse-go/v2"
-	"github.com/mark-by/little-busy-back/finance/internal/domain/entity"
-	"github.com/mark-by/little-busy-back/finance/internal/domain/repository"
+	"github.com/mark-by/little-busy-back/api/internal/domain/entity"
+	"github.com/mark-by/little-busy-back/api/internal/domain/repository"
 	"github.com/pkg/errors"
 	"time"
 )

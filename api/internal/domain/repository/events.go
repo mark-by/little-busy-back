@@ -11,7 +11,11 @@ type Events interface {
 	GetForDay(year, month, day int) ([]entity.Event, error)
 	GetForCustomer(customerID int64, since time.Time, days int) ([]entity.Event, error)
 	Create(event *entity.Event) (*entity.Event, error)
-	Update(event *entity.Event, currStartTime time.Time, withNext bool) error
-	Delete(eventID int64, currStartTime time.Time, withNext bool) error
+	UpdateRegular(event *entity.Event) error
+	UpdateWithNextRecurring(event *entity.Event, currStartTime time.Time) error
+	UpdateOnlyCurrRecurring(event *entity.Event, currStartTime time.Time) error
+	DeleteRegular(eventID int64) error
 	DeleteAllForCustomer(customerID int64) error
+	DeleteWithNextRecurring(event *entity.Event, currStartTime time.Time) error
+	DeleteOnlyCurrRecurring(event *entity.Event, currStartTime time.Time) error
 }

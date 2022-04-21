@@ -49,11 +49,7 @@ func (c Customers) Search(searchText, since string, limit int) ([]entity.Custome
 }
 
 func (c Customers) Delete(id int64) error {
-	err := c.customers.DeleteCustomer(id)
-	if err != nil {
-		return err
-	}
-	return c.events.DeleteAllForCustomer(id)
+	return c.customers.DeleteCustomer(id)
 }
 
 func (c Customers) Update(customer *entity.Customer) error {

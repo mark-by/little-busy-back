@@ -10,7 +10,7 @@ import (
 
 func convertRecord(record *entity.Record) *finance.Record {
 	return &finance.Record{
-		ClientID:    utils.DropNil(record.ClientID),
+		ClientID:    utils.DropNil(record.CustomerID),
 		EventID:     utils.DropNil(record.EventID),
 		Type:        record.Type,
 		Value:       record.Value,
@@ -35,7 +35,7 @@ func convertProtoRecord(record *finance.Record) *entity.Record {
 		return nil
 	}
 	return &entity.Record{
-		ClientID:    &record.ClientID,
+		CustomerID:  &record.ClientID,
 		EventID:     &record.EventID,
 		Type:        record.Type,
 		Value:       record.Value,

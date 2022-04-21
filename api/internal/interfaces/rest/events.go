@@ -130,6 +130,8 @@ func (s Server) getEvents(c echo.Context) error {
 		}
 	case "month":
 		fallthrough
+	case "not_paid":
+		fallthrough
 	case "day":
 		var request searchForDateRequest
 		err := s.bindAndValidate(c, &request)
@@ -137,10 +139,13 @@ func (s Server) getEvents(c echo.Context) error {
 			return echo.NewHTTPError(http.StatusBadRequest, err)
 		}
 
-		if request.Day == 0 {
+		if searchType == "not_paid" {
+			events, err = s.eventsApp.GetNotPaidForDay(request.Year, request.Month, request.Day)
+		} else if request.Day == 0 {
 			events, err = s.eventsApp.GetForMonth(request.Year, request.Month)
+		} else {
+			events, err = s.eventsApp.GetForDay(request.Year, request.Month, request.Day)
 		}
-		events, err = s.eventsApp.GetForDay(request.Year, request.Month, request.Day)
 		if err != nil {
 			return echo.NewHTTPError(http.StatusInternalServerError)
 		}

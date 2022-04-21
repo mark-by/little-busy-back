@@ -6,14 +6,14 @@ import (
 )
 
 type Event struct {
-	ID               int64      `db:"id"`
-	StartTime        time.Time  `db:"start_time"`
-	EndTime          time.Time  `db:"end_time"`
-	CustomerID       *int64     `db:"customer_id"`
-	Description      *string    `db:"description"`
-	IsRecurring      bool       `db:"is_recurring"`
-	Period           *string    `db:"period"`
-	RecurringEndTime *time.Time `db:"recurring_end_time"`
+	ID               int64      `json:"id" db:"id"`
+	StartTime        time.Time  `json:"start_time" validate:"required" db:"start_time"`
+	EndTime          time.Time  `json:"end_time" validate:"gtfield=StartTime" db:"end_time"`
+	CustomerID       *int64     `json:"customer_id,omitempty" validate:"gt=0" db:"customer_id"`
+	Description      *string    `json:"description" db:"description"`
+	IsRecurring      bool       `json:"is_recurring" db:"is_recurring"`
+	Period           *string    `json:"period,omitempty" validate:"oneof=daily weekly monthly ''" db:"period"`
+	RecurringEndTime *time.Time `json:"recurring_end_time,omitempty" db:"recurring_end_time"`
 }
 
 func (e Event) CopyWithNewDate(date time.Time) Event {

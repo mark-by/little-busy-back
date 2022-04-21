@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/georgysavva/scany/pgxscan"
 	"github.com/jackc/pgx/v4"
-	"github.com/mark-by/little-busy-back/scheduler/internal/domain/entity"
+	"github.com/mark-by/little-busy-back/api/internal/domain/entity"
 	"github.com/pkg/errors"
 	"time"
 )
@@ -48,10 +48,12 @@ func (e Event) makeEventRecurring(event *entity.Event, tx pgx.Tx) error {
 
 func (e Event) getRecurringEvents(start, end time.Time, forCustomer int64) (entity.Events, error) {
 	var args []interface{}
-	sqlString := "select e.id, customer_id, e.start_time, " +
-		"e.end_time, description, period, re.end_time as recurring_end_time " +
-		"from recurring_events re join events e on re.event_id = e.id " +
-		"where (e.start_time <= $1 and (re.end_time >= $2 or re.end_time is null)) "
+	sqlString := `select e.id, customer_id, e.start_time, 
+       	e.end_time, description, period, re.end_time as recurring_end_time, c.id "customer.id", c.name "customer.name"
+		from recurring_events re
+		join events e on re.event_id = e.id 
+		join customers c on customer_id = c.id 
+		where (e.start_time <= $1 and (re.end_time >= $2 or re.end_time is null)) `
 	args = append(args, end, start)
 	if forCustomer != 0 {
 		sqlString += "and customer_id = $3"

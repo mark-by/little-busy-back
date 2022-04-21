@@ -63,12 +63,11 @@ func main() {
 
 	authClient := microservices.NewAuthorizationClient("127.0.0.1:8000")
 	connDB := initDB(logger.Sugar())
-	schedulerClient := microservices.NewSchedulerClient("127.0.0.1:8002")
 
 	authorizationRepository := microservices.NewAuthorization(authClient)
 	userRepository := postgresql.NewUser(connDB, logger.Sugar().With("user repo"))
 	customerRepository := postgresql.NewCustomers(connDB)
-	eventsRepository := microservices.NewEvents(schedulerClient)
+	eventsRepository := postgresql.NewEvent(connDB)
 
 	userApp := application.NewUser(userRepository, authorizationRepository)
 	authApp := application.NewAuthorization(authorizationRepository)
