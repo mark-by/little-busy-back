@@ -28,6 +28,8 @@ type Server struct {
 	userApp     application.UserI
 	authApp     application.AuthorizationI
 	customerApp application.CustomersI
+	recordsApp  application.RecordsI
+	settingsApp application.SettingsI
 	config      *config.Config
 	formDecoder *form.Decoder
 }
@@ -37,6 +39,8 @@ type ServerOptions struct {
 	AuthApp     application.AuthorizationI
 	EventsApp   application.EventsI
 	CustomerApp application.CustomersI
+	RecordsApp  application.RecordsI
+	SettingsApp application.SettingsI
 	Logger      *zap.SugaredLogger
 	Config      *config.Config
 }
@@ -48,6 +52,8 @@ func NewServer(options *ServerOptions) *Server {
 		authApp:     options.AuthApp,
 		eventsApp:   options.EventsApp,
 		customerApp: options.CustomerApp,
+		recordsApp:  options.RecordsApp,
+		settingsApp: options.SettingsApp,
 		config:      options.Config,
 		formDecoder: form.NewDecoder(),
 	}
@@ -80,10 +86,16 @@ func (s Server) Start() error {
 	e.POST("/api/events", s.createEvent)
 	e.PUT("/api/events", s.updateEvent)
 	e.DELETE("/api/events/:id", s.deleteEvent)
+	e.GET("/api/events/notPaid", s.getNotPaidEvents)
 
-	e.GET("/api/records", s.getEvent)
-	e.POST("/api/records", s.getEvent)
-	e.GET("/api/records", s.getEvent)
+	e.GET("/api/records", s.getRecords)
+	e.POST("/api/records", s.createRecord)
+	e.DELETE("/api/records/:id", s.deleteRecord)
+	e.GET("/api/records/stat", s.getStat)
+	e.POST("/api/records/saveEvents", s.saveEventsToRecords)
+
+	e.GET("/api/settings", s.getSettings)
+	e.PUT("/api/settings", s.updateSettings)
 
 	return e.Start(s.config.Address)
 }

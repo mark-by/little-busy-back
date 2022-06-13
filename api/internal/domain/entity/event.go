@@ -9,11 +9,12 @@ type Event struct {
 	ID               int64      `json:"id" db:"id"`
 	StartTime        time.Time  `json:"start_time" validate:"required" db:"start_time"`
 	EndTime          time.Time  `json:"end_time" validate:"gtfield=StartTime" db:"end_time"`
-	CustomerID       *int64     `json:"customer_id,omitempty" validate:"gt=0" db:"customer_id"`
+	CustomerID       *int64     `json:"customer_id,omitempty" db:"customer_id"`
 	Customer         *Customer  `json:"customer,omitempty"`
 	Description      *string    `json:"description" db:"description"`
 	IsRecurring      bool       `json:"is_recurring" db:"is_recurring"`
-	Period           *string    `json:"period,omitempty" validate:"oneof=daily weekly monthly ''" db:"period"`
+	Period           *string    `json:"period,omitempty" db:"period"`
+	Price            *float64   `json:"price,omitempty"`
 	RecurringEndTime *time.Time `json:"recurring_end_time,omitempty" db:"recurring_end_time"`
 }
 

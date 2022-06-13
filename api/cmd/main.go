@@ -68,17 +68,25 @@ func main() {
 	userRepository := postgresql.NewUser(connDB, logger.Sugar().With("user repo"))
 	customerRepository := postgresql.NewCustomers(connDB)
 	eventsRepository := postgresql.NewEvent(connDB)
+	recordsRepository := postgresql.NewRecord(connDB)
+	settingsRepository := postgresql.NewSettings(connDB)
 
 	userApp := application.NewUser(userRepository, authorizationRepository)
 	authApp := application.NewAuthorization(authorizationRepository)
 	customerApp := application.NewCustomers(customerRepository, eventsRepository)
-	eventsApp := application.NewEvents(eventsRepository, customerRepository)
+	eventsApp := application.NewEvents(eventsRepository, customerRepository, recordsRepository)
+	settingsApp := application.NewSettings(settingsRepository)
+	recordsApp := application.NewRecords(recordsRepository, settingsRepository)
+
+	application.NewScheduler(recordsApp, eventsApp, logger.Sugar()).Start()
 
 	log.Print(rest.NewServer(&rest.ServerOptions{
 		UserApp:     userApp,
 		AuthApp:     authApp,
 		CustomerApp: customerApp,
 		EventsApp:   eventsApp,
+		RecordsApp:  recordsApp,
+		SettingsApp: settingsApp,
 		Logger:      logger.Sugar(),
 		Config:      config,
 	}).Start())

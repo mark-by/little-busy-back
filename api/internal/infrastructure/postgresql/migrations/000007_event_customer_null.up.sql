@@ -1,0 +1,1 @@
+alter table events alter column customer_id drop not null;

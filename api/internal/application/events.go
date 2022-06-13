@@ -52,15 +52,18 @@ func (e Events) GetNotPaidForDay(year, month, day int) ([]entity.Event, error) {
 		return nil, err
 	}
 
-	has := map[int64]bool{}
+	paid := map[int64]bool{}
 	for _, record := range records {
-		has[record.EventID] = true
+		if record.EventID == nil {
+			continue
+		}
+		paid[*record.EventID] = true
 	}
 
 	var notPaidEvents []entity.Event
 
 	for _, event := range events {
-		if _, ok := has[event.ID]; ok {
+		if _, ok := paid[event.ID]; !ok {
 			notPaidEvents = append(notPaidEvents, event)
 		}
 	}
@@ -144,8 +147,8 @@ func (e Events) Delete(eventID int64, currStartTime time.Time, withNext bool) er
 	return e.repoEvents.DeleteRegular(eventID)
 }
 
-func NewEvents(events repository.Events, customers repository.Customers) *Events {
-	return &Events{repoEvents: events, repoCustomers: customers}
+func NewEvents(events repository.Events, customers repository.Customers, records repository.Record) *Events {
+	return &Events{repoEvents: events, repoCustomers: customers, repoRecords: records}
 }
 
 var _ EventsI = &Events{}

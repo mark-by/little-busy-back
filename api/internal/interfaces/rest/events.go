@@ -130,8 +130,6 @@ func (s Server) getEvents(c echo.Context) error {
 		}
 	case "month":
 		fallthrough
-	case "not_paid":
-		fallthrough
 	case "day":
 		var request searchForDateRequest
 		err := s.bindAndValidate(c, &request)
@@ -139,18 +137,33 @@ func (s Server) getEvents(c echo.Context) error {
 			return echo.NewHTTPError(http.StatusBadRequest, err)
 		}
 
-		if searchType == "not_paid" {
-			events, err = s.eventsApp.GetNotPaidForDay(request.Year, request.Month, request.Day)
-		} else if request.Day == 0 {
+		if request.Day == 0 {
 			events, err = s.eventsApp.GetForMonth(request.Year, request.Month)
 		} else {
 			events, err = s.eventsApp.GetForDay(request.Year, request.Month, request.Day)
 		}
 		if err != nil {
+			s.logger.Error(err)
 			return echo.NewHTTPError(http.StatusInternalServerError)
 		}
 	default:
 		return echo.NewHTTPError(http.StatusBadRequest, "undefined type")
+	}
+
+	return c.JSON(http.StatusOK, events)
+}
+
+func (s Server) getNotPaidEvents(c echo.Context) error {
+	date := c.QueryParam("date")
+	dateValue, err := time.Parse("2006-01-02", date)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err)
+	}
+
+	events, err := s.eventsApp.GetNotPaidForDay(dateValue.Year(), int(dateValue.Month()), dateValue.Day())
+	if err != nil {
+		s.logger.Error(err)
+		return echo.NewHTTPError(http.StatusInternalServerError)
 	}
 
 	return c.JSON(http.StatusOK, events)

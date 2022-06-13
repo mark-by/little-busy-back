@@ -36,7 +36,7 @@ func (c Customers) GetCustomers(ids []int64) ([]entity.Customer, error) {
 
 func (c Customers) UpdateCustomer(customer *entity.Customer) error {
 	_, err := c.db.Exec(context.Background(),
-		"update customers set name = $1, tel = $2 where id = $3", customer.Name, customer.Tel, customer.ID)
+		"update customers set name = $1, tel = $2, special_price_per_hour = $3 where id = $4", customer.Name, customer.Tel, customer.SpecialPricePerHour, customer.ID)
 	if err != nil {
 		return errors.Wrap(convertPgxError(err), "fail to update")
 	}
@@ -48,7 +48,7 @@ func (c Customers) GetByID(customerID int64) (*entity.Customer, error) {
 		ID: customerID,
 	}
 	err := pgxscan.Get(context.Background(), c.db, &customer,
-		"select name, tel from customers where id = $1", customerID)
+		"select * from customers where id = $1", customerID)
 	if err != nil {
 		return nil, errors.Wrap(err, "fail to ger customer by id")
 	}
@@ -57,8 +57,8 @@ func (c Customers) GetByID(customerID int64) (*entity.Customer, error) {
 
 func (c Customers) CreateCustomer(customer *entity.Customer) (*entity.Customer, error) {
 	err := c.db.QueryRow(context.Background(),
-		"insert into customers (name, tel) values ($1, $2) returning id",
-		customer.Name, customer.Tel).Scan(&customer.ID)
+		"insert into customers (name, tel, special_price_per_hour) values ($1, $2, $3) returning id",
+		customer.Name, customer.Tel, customer.SpecialPricePerHour).Scan(&customer.ID)
 	if err != nil {
 		return nil, errors.Wrap(convertPgxError(err), "create customer fail")
 	}
@@ -102,7 +102,7 @@ func (c Customers) SearchCustomers(searchText string, searchField string, since 
 
 	var customers []entity.Customer
 
-	err := pgxscan.Select(context.Background(), c.db, &customers, "select id, name, tel from customers where "+
+	err := pgxscan.Select(context.Background(), c.db, &customers, "select id, name, tel, special_price_per_hour from customers where "+
 		sqlFilterByName+sqlFilterBySearchField+sqlOrder, args...)
 
 	if err != nil {

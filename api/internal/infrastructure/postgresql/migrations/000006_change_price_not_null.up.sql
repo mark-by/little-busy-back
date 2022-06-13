@@ -1,0 +1,1 @@
+alter table events alter column price drop not null;

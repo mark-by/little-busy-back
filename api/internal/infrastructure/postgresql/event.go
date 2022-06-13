@@ -36,15 +36,14 @@ func (e Event) DeleteAllForCustomer(customerID int64) error {
 }
 
 func (e Event) Get(eventID int64) (*entity.Event, error) {
-	var event entity.Event
-	err := pgxscan.Get(context.Background(), e.db, &event,
-		`select e.id, customer_id, start_time, e.end_time, description, period, re.end_time recurring_end_time, 
-       	c.id "customer.id", c.name "customer.name", c.tel "customer.tel"
+	event, err := e.scanVerboseEvent(e.db.QueryRow(context.Background(),
+		`select e.id, customer_id, start_time, e.end_time, description, price, period, re.end_time recurring_end_time, 
+       	c.name, c.special_price_per_hour
 		from events e
        	left join recurring_events re on e.id = re.event_id 
-		join customers c on customer_id = c.id	
+		left join customers c on customer_id = c.id	
 		where e.id = $1
-       `, eventID)
+       `, eventID))
 	if err != nil {
 		return nil, errors.Wrap(err, "fail to get event by id")
 	}
@@ -60,7 +59,7 @@ func (e Event) GetForCustomer(customerID int64, since time.Time, days int) ([]en
 	var events entity.Events
 	end := since.AddDate(0, 0, days)
 	err := pgxscan.Select(context.Background(), e.db, &events,
-		"select e.id, customer_id, e.start_time, e.end_time, description "+
+		"select e.id, customer_id, e.start_time, e.end_time, description, price "+
 			"from events as e "+
 			"left join recurring_events as re on e.id = re.event_id "+
 			"where re.event_id is null and "+
@@ -79,15 +78,25 @@ func (e Event) GetForMonth(year, month int) ([]entity.Event, error) {
 	end := start.AddDate(0, 1, 0)
 
 	var events []entity.Event
-	err := pgxscan.Select(context.Background(), e.db, &events,
-		`select e.id as id, customer_id, e.start_time, e.end_time, description,
-       	c.id as "customer.id", c.name as "customer.name"
+	rows, err := e.db.Query(context.Background(),
+		`select e.id as id, customer_id, e.start_time, e.end_time, description, price, 
+       	c.name, c.special_price_per_hour
 		from events as e
 		left join recurring_events as re on e.id = re.event_id
-		join customers as c on customer_id = c.id 
+		left join customers as c on customer_id = c.id 
 		where re.event_id is null and e.start_time > $1 and e.start_time < $2`, start, end)
 	if err != nil {
 		return nil, errors.Wrap(err, "fail to select events")
+	}
+
+	defer rows.Close()
+
+	for rows.Next() {
+		event, err := e.scanPreviewEvent(rows)
+		if err != nil {
+			return nil, err
+		}
+		events = append(events, event)
 	}
 
 	events, err = e.addRecurringEvents(events, start, end)
@@ -104,8 +113,8 @@ func (e Event) GetForDay(year, month, day int) ([]entity.Event, error) {
 
 	var events entity.Events
 	err := pgxscan.Select(context.Background(), e.db, &events,
-		`select e.id, customer_id, e.start_time, e.end_time, description,
-        c.id as "customer.id", c.name as "customer.name" 
+		`select e.id, customer_id, e.start_time, e.end_time, description, price,
+        c.id as "customer.id", c.name as "customer.name", c.special_price_per_hour "customer.special_price_per_hour" 
 		from events as e 
 		left join recurring_events as re on e.id = re.event_id 
 		join customers as c on customer_id = c.id
@@ -140,11 +149,12 @@ func (e Event) UpdateRegular(event *entity.Event) error {
 	defer func() { utils.EndTx(tx, err) }()
 
 	_, err = tx.Exec(context.Background(),
-		"update events set customer_id = $1, start_time = $2, end_time = $3, description = $4 where id = $5",
+		"update events set customer_id = $1, start_time = $2, end_time = $3, description = $4, price = $5 where id = $6",
 		event.CustomerID,
 		event.StartTime,
 		event.EndTime,
 		event.Description,
+		event.Price,
 		event.ID)
 	if err != nil {
 		return errors.Wrap(err, "fail to update")

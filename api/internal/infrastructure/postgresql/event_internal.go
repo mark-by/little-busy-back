@@ -2,6 +2,7 @@ package postgresql
 
 import (
 	"context"
+	"database/sql"
 	"github.com/georgysavva/scany/pgxscan"
 	"github.com/jackc/pgx/v4"
 	"github.com/mark-by/little-busy-back/api/internal/domain/entity"
@@ -11,12 +12,13 @@ import (
 
 func (e Event) create(event *entity.Event, tx pgx.Tx) (*entity.Event, error) {
 	err := tx.QueryRow(context.Background(),
-		"insert into events (customer_id, start_time, end_time, description) "+
-			"values ($1, $2, $3, $4) returning id",
+		"insert into events (customer_id, start_time, end_time, description, price) "+
+			"values ($1, $2, $3, $4, $5) returning id",
 		event.CustomerID,
 		event.StartTime,
 		event.EndTime,
-		event.Description).Scan(&event.ID)
+		event.Description,
+		event.Price).Scan(&event.ID)
 	if err != nil {
 		return nil, errors.Wrap(err, "fail to insert")
 	}
@@ -49,7 +51,7 @@ func (e Event) makeEventRecurring(event *entity.Event, tx pgx.Tx) error {
 func (e Event) getRecurringEvents(start, end time.Time, forCustomer int64) (entity.Events, error) {
 	var args []interface{}
 	sqlString := `select e.id, customer_id, e.start_time, 
-       	e.end_time, description, period, re.end_time as recurring_end_time, c.id "customer.id", c.name "customer.name"
+       	e.end_time, price, description, period, re.end_time as recurring_end_time, c.id "customer.id", c.name "customer.name"
 		from recurring_events re
 		join events e on re.event_id = e.id 
 		join customers c on customer_id = c.id 
@@ -124,4 +126,74 @@ func (e Event) stopRecurring(tx pgx.Tx, eventID int64, endTime time.Time) error 
 		"update recurring_events set end_time = $1 where event_id = $2",
 		endTime, eventID)
 	return err
+}
+
+type canScan interface {
+	Scan(dest ...interface{}) error
+}
+
+func (e Event) scanPreviewEvent(row canScan) (entity.Event, error) {
+	newEvent := entity.Event{}
+	customer := entity.Customer{}
+	customerID := sql.NullInt64{}
+	description := sql.NullString{}
+	price := sql.NullFloat64{}
+
+	customerName := sql.NullString{}
+	customerPrice := sql.NullInt32{}
+
+	err := row.Scan(&newEvent.ID, &customerID, &newEvent.StartTime, &newEvent.EndTime, &description, &price,
+		&customerName, &customerPrice)
+
+	if err != nil {
+		return newEvent, errors.Wrap(err, "fail to scan for select events")
+	}
+
+	if customerID.Valid {
+		newEvent.CustomerID = &customerID.Int64
+		customer.Name = customerName.String
+		if customerPrice.Valid {
+			tmp := int(customerPrice.Int32)
+			customer.SpecialPricePerHour = &tmp
+		}
+		newEvent.Customer = &customer
+	}
+
+	return newEvent, nil
+}
+
+func (e Event) scanVerboseEvent(row canScan) (entity.Event, error) {
+	newEvent := entity.Event{}
+	customer := entity.Customer{}
+	customerID := sql.NullInt64{}
+	description := sql.NullString{}
+	price := sql.NullFloat64{}
+	period := sql.NullString{}
+	recurringEndTime := sql.NullTime{}
+
+	customerName := sql.NullString{}
+	customerPrice := sql.NullInt32{}
+
+	err := row.Scan(&newEvent.ID, &customerID, &newEvent.StartTime, &newEvent.EndTime, &description, &price,
+		&period, &recurringEndTime, &customerName, &customerPrice)
+
+	if err != nil {
+		return newEvent, errors.Wrap(err, "fail to scan for select events")
+	}
+
+	if customerID.Valid {
+		newEvent.CustomerID = &customerID.Int64
+		customer.Name = customerName.String
+		if customerPrice.Valid {
+			tmp := int(customerPrice.Int32)
+			customer.SpecialPricePerHour = &tmp
+		}
+		newEvent.Customer = &customer
+	}
+
+	if period.Valid {
+		newEvent.RecurringEndTime = &recurringEndTime.Time
+	}
+
+	return newEvent, nil
 }
