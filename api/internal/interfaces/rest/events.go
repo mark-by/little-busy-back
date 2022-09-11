@@ -36,10 +36,7 @@ func (s Server) deleteEvent(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "date query param should be date")
 	}
 	withNextStr := c.QueryParam("with_next")
-	var withNext bool
-	if len(withNextStr) > 0 {
-		withNext = true
-	}
+	withNext := len(withNextStr) > 0
 
 	if withNextStr == "false" {
 		withNext = false

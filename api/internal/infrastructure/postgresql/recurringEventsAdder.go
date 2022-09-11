@@ -17,6 +17,7 @@ func newRecurringEventsAdder(recurringEvents entity.Events) *recurringEventsAdde
 		if event.Period == nil {
 			continue
 		}
+		event.IsRecurring = true
 		switch *event.Period {
 		case "daily":
 			picker.AddToDaily(event)
