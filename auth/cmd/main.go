@@ -11,7 +11,7 @@ func main() {
 	logger, _ := zap.NewProduction()
 
 	sessionRepo := redis.NewSession(&redis.Options{
-		Host: "127.0.0.1",
+		Host: "redis",
 		Port: "6379",
 		User: "auth",
 	})

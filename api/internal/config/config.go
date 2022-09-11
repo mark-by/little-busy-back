@@ -1,27 +1,22 @@
 package config
 
 import (
-	"gopkg.in/yaml.v3"
-	"io/ioutil"
-	"log"
+	"os"
 )
 
 type Config struct {
 	Secret  string `yaml:"secret"`
 	Address string `yaml:"address"`
+	Migrations string
+	DBPassword string
 }
 
-func ParseConfig(filename string) *Config {
-	data, err := ioutil.ReadFile(filename)
-	if err != nil {
-		log.Fatalf("fail to read config file %s: %s", filename, err)
-	}
-
+func ParseConfig() *Config {
 	config := &Config{}
-	err = yaml.Unmarshal(data, config)
-	if err != nil {
-		log.Fatalf("fail to unmarshal config: %s", err)
-	}
+	config.Secret = os.Getenv("SECRET")
+	config.Address = os.Getenv("ADDRESS")
+	config.Migrations = os.Getenv("MIGRATIONS")
+	config.DBPassword = os.Getenv("DB_PASSWORD")
 
 	return config
 }

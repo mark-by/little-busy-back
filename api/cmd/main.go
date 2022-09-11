@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"flag"
 	"fmt"
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v4/pgxpool"
@@ -15,25 +14,32 @@ import (
 	"go.uber.org/zap"
 	"log"
 	"strconv"
+	"time"
 )
 
-func initDB(logger *zap.SugaredLogger) *pgxpool.Pool {
+func initDB(logger *zap.SugaredLogger, sysConfig *config.Config) *pgxpool.Pool {
 	config := pgconn.Config{
-		Host: "127.0.0.1",
-		Port: 5432, Database: "postgres",
+		Host: "postgres",
+		Port: 5432,
+		Database: "postgres",
 		User:     "postgres",
 		Password: "123",
 	}
-	utils.Migrate(&utils.Options{
-		MigrationsDir: "api/internal/infrastructure/postgresql/migrations",
-		User:          config.User,
-		Password:      config.Password,
-		Host:          config.Host,
-		Port:          strconv.Itoa(int(config.Port)),
-		Type:          "postgresql",
-		Name:          config.Database,
-		Logger:        logger,
-	})
+
+	migrateFunc := func () {
+		utils.Migrate(&utils.Options{
+			MigrationsDir: sysConfig.Migrations,
+			User:          config.User,
+			Password:      config.Password,
+			Host:          config.Host,
+			Port:          strconv.Itoa(int(config.Port)),
+			Type:          "postgresql",
+			Name:          config.Database,
+			Logger:        logger,
+		})
+	}
+
+	utils.Retry(migrateFunc, 4, 1 * time.Second)
 
 	pool, err := pgxpool.Connect(context.Background(),
 		fmt.Sprintf("postgres://%s:%s@%s:%v/%s",
@@ -47,10 +53,7 @@ func initDB(logger *zap.SugaredLogger) *pgxpool.Pool {
 }
 
 func initConfig() *config.Config {
-	configFilename := flag.String("f", "config.yaml", "config file")
-	flag.Parse()
-
-	return config.ParseConfig(*configFilename)
+	return config.ParseConfig()
 }
 
 func main() {
@@ -61,8 +64,8 @@ func main() {
 
 	config := initConfig()
 
-	authClient := microservices.NewAuthorizationClient("127.0.0.1:8000")
-	connDB := initDB(logger.Sugar())
+	authClient := microservices.NewAuthorizationClient("auth:8000")
+	connDB := initDB(logger.Sugar(), config)
 
 	authorizationRepository := microservices.NewAuthorization(authClient)
 	userRepository := postgresql.NewUser(connDB, logger.Sugar().With("user repo"))

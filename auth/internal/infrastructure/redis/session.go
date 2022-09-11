@@ -37,9 +37,32 @@ func NewSession(options *Options) *Session {
 		},
 	}
 
-	session.connPool.Get().Do("GET", "ping")
+	session.Ping()
 
 	return session
+}
+
+func (s Session) Ping() {
+	conn := s.connPool.Get()
+	defer conn.Close()
+
+	reply, err := redis.String(conn.Do("SET", "PPING", "PPONG"))
+	if err != nil {
+		log.Fatal("fail to set ppong: ", err)
+	}
+	if reply != "OK" {
+		log.Fatal("reply is not ok: ", err)
+	}
+
+	log.Println("PING OK")
+
+	pong, err := redis.String(s.connPool.Get().Do("GET", "PPING"))
+	if err != nil {
+		log.Fatal("fail to get pping redis: ", err)
+	}
+	if pong != "PPONG" {
+		log.Fatal("pong isn't equal 'PONG': ", pong)
+	}
 }
 
 func (s Session) Get(sessionID string) (*entity.Session, error) {

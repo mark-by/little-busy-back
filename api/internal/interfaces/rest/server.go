@@ -63,7 +63,7 @@ func (s Server) Start() error {
 	e := echo.New()
 
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins:     []string{"http://localhost:3000", "https://irina-massage.ru", "https://localhost.ru"},
+		AllowOrigins:     []string{"http://localhost","http://localhost:3000", "https://irina-massage.ru", "https://localhost.ru"},
 		AllowMethods:     middleware.DefaultCORSConfig.AllowMethods,
 		AllowHeaders:     []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept},
 		AllowCredentials: true,

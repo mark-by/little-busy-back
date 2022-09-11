@@ -52,7 +52,8 @@ func Migrate(options *Options) {
 		connectionString,
 	)
 	if err != nil {
-		log.Fatal("Fail to connect to database: ", err)
+		s, _ := fmt.Printf("Fail to connect to database: %s", err)
+		panic(s)
 	}
 	defer m.Close()
 

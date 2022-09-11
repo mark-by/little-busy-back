@@ -1,0 +1,79 @@
+version: '3.9'
+services:
+  redis:
+    image: redis
+    container_name: redis
+    restart: always
+    networks:
+      - littlebusy
+
+  postgres:
+    image: postgres
+    container_name: postgres
+    restart: always
+    environment:
+      - PGDATA=/var/lib/postgresql/data/pgdata
+      - POSTGRES_PASSWORD=123
+    volumes:
+      - ${PWD}/volumes/pgdata:/var/lib/postgresql/data
+    networks:
+      - littlebusy
+
+  api:
+    container_name: api
+    build:
+      context: .
+      dockerfile: build/api.Dockerfile
+      args:
+        - IMAGE=api
+#    image: api
+#    command: ["-f", "/app/config.yml"]
+    environment:
+      - SECRET=159357
+      - ADDRESS=:8000
+      - DB_PASSWORD=123
+      - MIGRATIONS=/migrations
+    volumes:
+      - ${PWD}/api/internal/infrastructure/postgresql/migrations:/migrations
+    networks:
+      - littlebusy
+      - frontend
+    depends_on:
+      - postgres
+
+  auth:
+    container_name: auth
+    build:
+      context: .
+      dockerfile: build/auth.Dockerfile
+      args:
+        - IMAGE=auth
+#    image: auth
+#    command: ["-f", "/app/config.yml"]
+    networks:
+      - littlebusy
+    depends_on:
+      - redis
+
+  frontend:
+    container_name: frontend
+    image: nginx:latest
+    volumes:
+      - ${PWD}/volumes/certs:/certs
+      - ${PWD}/volumes/static:/var/www/html
+      - ${PWD}/volumes/nginx.conf:/etc/nginx/conf.d/default.conf
+    ports:
+      - 443:443
+      - 80:80
+    networks:
+      - littlebusy
+      - frontend
+    depends_on:
+      - auth
+      - api
+
+networks:
+  littlebusy:
+    name: littlebusy
+  frontend:
+    name: frontend
