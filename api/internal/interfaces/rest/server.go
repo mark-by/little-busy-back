@@ -63,7 +63,7 @@ func (s Server) Start() error {
 	e := echo.New()
 
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins:     []string{"http://localhost","http://localhost:3000", "https://irina-massage.ru", "https://localhost.ru"},
+		AllowOrigins:     []string{"http://localhost", "http://localhost:3000", "https://irina-massage.ru", "https://localhost.ru"},
 		AllowMethods:     middleware.DefaultCORSConfig.AllowMethods,
 		AllowHeaders:     []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept},
 		AllowCredentials: true,
@@ -75,27 +75,27 @@ func (s Server) Start() error {
 
 	e.POST("/api/session", s.logIn)
 
-	e.GET("/api/customers", s.searchCustomer)
-	e.GET("/api/customers/:id", s.getCustomer)
-	e.POST("/api/customers", s.createCustomer)
-	e.PUT("/api/customers", s.updateCustomer)
-	e.DELETE("/api/customers/:id", s.deleteCustomer)
+	e.GET("/api/customers", s.searchCustomer, s.authMiddleware)
+	e.GET("/api/customers/:id", s.getCustomer, s.authMiddleware)
+	e.POST("/api/customers", s.createCustomer, s.authMiddleware)
+	e.PUT("/api/customers", s.updateCustomer, s.authMiddleware)
+	e.DELETE("/api/customers/:id", s.deleteCustomer, s.authMiddleware)
 
-	e.GET("/api/events", s.getEvents)
-	e.GET("/api/events/:id", s.getEvent)
-	e.POST("/api/events", s.createEvent)
-	e.PUT("/api/events", s.updateEvent)
-	e.DELETE("/api/events/:id", s.deleteEvent)
-	e.GET("/api/events/notPaid", s.getNotPaidEvents)
+	e.GET("/api/events", s.getEvents, s.authMiddleware)
+	e.GET("/api/events/:id", s.getEvent, s.authMiddleware)
+	e.POST("/api/events", s.createEvent, s.authMiddleware)
+	e.PUT("/api/events", s.updateEvent, s.authMiddleware)
+	e.DELETE("/api/events/:id", s.deleteEvent, s.authMiddleware)
+	e.GET("/api/events/notPaid", s.getNotPaidEvents, s.authMiddleware)
 
-	e.GET("/api/records", s.getRecords)
-	e.POST("/api/records", s.createRecord)
-	e.DELETE("/api/records/:id", s.deleteRecord)
-	e.GET("/api/records/stat", s.getStat)
-	e.POST("/api/records/saveEvents", s.saveEventsToRecords)
+	e.GET("/api/records", s.getRecords, s.authMiddleware)
+	e.POST("/api/records", s.createRecord, s.authMiddleware)
+	e.DELETE("/api/records/:id", s.deleteRecord, s.authMiddleware)
+	e.GET("/api/records/stat", s.getStat, s.authMiddleware)
+	e.POST("/api/records/saveEvents", s.saveEventsToRecords, s.authMiddleware)
 
-	e.GET("/api/settings", s.getSettings)
-	e.PUT("/api/settings", s.updateSettings)
+	e.GET("/api/settings", s.getSettings, s.authMiddleware)
+	e.PUT("/api/settings", s.updateSettings, s.authMiddleware)
 
 	return e.Start(s.config.Address)
 }

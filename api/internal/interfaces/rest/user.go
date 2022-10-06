@@ -25,6 +25,24 @@ func (s Server) getUserBySession(c echo.Context) error {
 	return c.JSON(http.StatusOK, user)
 }
 
+func (s Server) getUserBySessionForMiddleware(c echo.Context) error {
+	cookie, err := c.Cookie("session_id")
+	if err == http.ErrNoCookie {
+		return c.String(http.StatusUnauthorized, "")
+	}
+	if err != nil {
+		return err
+	}
+
+	_, err = s.userApp.GetUserBySession(cookie.Value)
+	if err != nil {
+		c.SetCookie(s.deleteAuthCookie())
+		return err
+	}
+
+	return nil
+}
+
 func (s Server) createAuthCookie(session *entity.AuthSession) *http.Cookie {
 	authCookie := new(http.Cookie)
 	authCookie.Name = "session_id"
