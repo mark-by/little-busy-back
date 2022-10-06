@@ -56,28 +56,52 @@ func (e Event) Get(eventID int64) (*entity.Event, error) {
 }
 
 func (e Event) GetForCustomer(customerID int64, since time.Time, days int) ([]entity.Event, error) {
-	var events entity.Events
 	end := since.AddDate(0, 0, days)
-	err := pgxscan.Select(context.Background(), e.db, &events,
-		"select e.id, customer_id, e.start_time, e.end_time, description, price "+
-			"from events as e "+
-			"left join recurring_events as re on e.id = re.event_id "+
-			"where re.event_id is null and "+
-			"customer_id = $1 and e.start_time > $2 and e.start_time < $3",
-		customerID, since, end)
+
+	rows, err := e.db.Query(context.Background(),
+		`select e.id as id, customer_id, e.start_time, e.end_time, description, price, 
+       	c.name, c.special_price_per_hour
+		from events as e
+		left join recurring_events as re on e.id = re.event_id
+		join customers as c on customer_id = c.id 
+		where
+		    re.event_id is null 
+		  	and customer_id = $1
+		  	and e.start_time > $2
+		  	and e.start_time < $3`, customerID, since, end)
+	if err != nil {
+		return nil, errors.Wrap(err, "fail to select events")
+	}
+
+	events, err := e.scanPreviewEvents(rows)
 
 	if err != nil {
-		return nil, errors.Wrap(err, "fail to select events for customer")
+		return nil, errors.Wrap(err, "fail to select events for month")
 	}
 
 	return e.addCustomersRecurringEvents(events, since, end, customerID)
+}
+
+func (e Event) scanPreviewEvents(rows pgx.Rows) ([]entity.Event, error) {
+	var events []entity.Event
+
+	defer rows.Close()
+
+	for rows.Next() {
+		event, err := e.scanPreviewEvent(rows)
+		if err != nil {
+			return nil, err
+		}
+		events = append(events, event)
+	}
+
+	return events, nil
 }
 
 func (e Event) GetForMonth(year, month int) ([]entity.Event, error) {
 	start := time.Date(year, time.Month(month), 1, 0, 0, 0, 0, time.Now().Location())
 	end := start.AddDate(0, 1, 0)
 
-	var events []entity.Event
 	rows, err := e.db.Query(context.Background(),
 		`select e.id as id, customer_id, e.start_time, e.end_time, description, price, 
        	c.name, c.special_price_per_hour
@@ -89,14 +113,9 @@ func (e Event) GetForMonth(year, month int) ([]entity.Event, error) {
 		return nil, errors.Wrap(err, "fail to select events")
 	}
 
-	defer rows.Close()
-
-	for rows.Next() {
-		event, err := e.scanPreviewEvent(rows)
-		if err != nil {
-			return nil, err
-		}
-		events = append(events, event)
+	events, err := e.scanPreviewEvents(rows)
+	if err != nil {
+		return nil, errors.Wrap(err, "fail to select events for month")
 	}
 
 	events, err = e.addRecurringEvents(events, start, end)
@@ -257,6 +276,7 @@ func (e Event) DeleteOnlyCurrRecurring(event *entity.Event, currStartTime time.T
 	}
 	defer func() { utils.EndTx(tx, err) }()
 
+	// если от повторяющегося события осталось только одно событие
 	if event.RecurringEndTime != nil && event.StartTime.Sub(*event.RecurringEndTime) == 0 {
 		return e.deleteAllForEvent(tx, event.ID)
 	}

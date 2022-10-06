@@ -99,7 +99,7 @@ func (s Server) getEvent(c echo.Context) error {
 type searchForCustomerRequest struct {
 	CustomerID int64     `query:"customer_id" validate:"required"`
 	Since      time.Time `query:"since" validate:"required"`
-	Days       int       `query:"days" validate:"lte=50"`
+	Days       int       `query:"days" validate:"gte=1,lte=1000"`
 }
 
 type searchForDateRequest struct {

@@ -14,6 +14,7 @@ FROM alpine:3.14
 ARG BUILD_DATE
 ARG BUILD_REF
 ARG IMAGE
+RUN apk add --no-cache tzdata
 COPY --from=build /build/main_${IMAGE} /usr/bin
 WORKDIR /${IMAGE}
 ENTRYPOINT ["main_api"]

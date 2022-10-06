@@ -26,23 +26,22 @@ func (e *eventGenerator) addEventToStoreForTime(recurringEvent entity.Event, cur
 	e.generatedEvents = append(e.generatedEvents, newEvent)
 }
 
+// check dates without time
 func (e eventGenerator) timeCheck(recurringEvent entity.Event, curr time.Time) bool {
-	return !dateIsLess(curr, recurringEvent.StartTime) && (recurringEvent.RecurringEndTime == nil || !dateIsLess(*recurringEvent.RecurringEndTime, curr))
+	curr = time.Date(curr.Year(), curr.Month(), curr.Day(), 0, 0, 0, 0, time.Local)
+	recurringEventStartTime := time.Date(recurringEvent.StartTime.Year(), recurringEvent.StartTime.Month(), recurringEvent.StartTime.Day(),
+		0, 0, 0, 0, time.Local)
+	var recurringEventEndTime time.Time
+	if recurringEvent.RecurringEndTime != nil {
+		recurringEventEndTime = time.Date(recurringEvent.RecurringEndTime.Year(), recurringEvent.RecurringEndTime.Month(), recurringEvent.RecurringEndTime.Day(),
+			0, 0, 0, 0, time.Local)
+	}
+	return !dateIsLess(curr, recurringEventStartTime) && (recurringEvent.RecurringEndTime == nil || !dateIsLess(recurringEventEndTime, curr))
 }
 
+// l < r
 func dateIsLess(l, r time.Time) bool {
-	ly, lm, ld := l.Date()
-	ry, rm, rd := r.Date()
-	if ly > ry {
-		return false
-	}
-	if lm > rm {
-		return false
-	}
-	if ld >= rd {
-		return false
-	}
-	return true
+	return l.Sub(r).Hours() < 0
 }
 
 func (e eventGenerator) GenEvents(from, to time.Time) entity.Events {

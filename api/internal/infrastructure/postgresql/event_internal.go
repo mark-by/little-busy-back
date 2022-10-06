@@ -3,7 +3,6 @@ package postgresql
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"github.com/jackc/pgx/v4"
 	"github.com/mark-by/little-busy-back/api/internal/domain/entity"
 	"github.com/pkg/errors"
@@ -162,7 +161,7 @@ func (e Event) deleteOnlyCurrRecurring(event *entity.Event, date time.Time, tx p
 
 	nextEvent := oldEvent.CopyWithNewDate(date).NextRecurring()
 	if nextEvent == nil {
-		return errors.New(fmt.Sprintf("something went wrong with copy event: %+v date: %v", oldEvent, date))
+		return nil
 	}
 
 	_, err = e.create(nextEvent, tx)
@@ -232,8 +231,13 @@ func (e Event) scanVerboseEvent(row canScan) (entity.Event, error) {
 		return newEvent, errors.Wrap(err, "fail to scan for select events")
 	}
 
+	if price.Valid {
+		newEvent.Price = &price.Float64
+	}
+
 	if customerID.Valid {
 		newEvent.CustomerID = &customerID.Int64
+		customer.ID = customerID.Int64
 		customer.Name = customerName.String
 		if customerPrice.Valid {
 			tmp := int(customerPrice.Int32)
