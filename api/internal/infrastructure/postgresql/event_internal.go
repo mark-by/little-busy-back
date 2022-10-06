@@ -204,6 +204,10 @@ func (e Event) scanPreviewEvent(row canScan) (entity.Event, error) {
 		return newEvent, errors.Wrap(err, "fail to scan for select events")
 	}
 
+	if price.Valid {
+		newEvent.Price = &price.Float64
+	}
+
 	if customerID.Valid {
 		newEvent.CustomerID = &customerID.Int64
 		customer.Name = customerName.String
