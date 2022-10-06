@@ -50,7 +50,7 @@ func (e Event) makeEventRecurring(event *entity.Event, tx pgx.Tx) error {
 func (e Event) getRecurringEvents(start, end time.Time, forCustomer int64) (entity.Events, error) {
 	var args []interface{}
 	sqlString := `select e.id, customer_id, e.start_time, 
-       	e.end_time, price, description, period, re.end_time as recurring_end_time, c.name
+       	e.end_time, price, description, period, re.end_time as recurring_end_time, c.name, c.special_price_per_hour
 		from recurring_events re
 		join events e on re.event_id = e.id 
 		left join customers c on customer_id = c.id 
@@ -78,9 +78,10 @@ func (e Event) getRecurringEvents(start, end time.Time, forCustomer int64) (enti
 		description := sql.NullString{}
 		period := sql.NullString{}
 		recurringEndTime := sql.NullTime{}
+		specialPricePerHour := sql.NullInt32{}
 
 		err = rows.Scan(&newEvent.ID, &customerID, &newEvent.StartTime, &newEvent.EndTime, &price, &description, &period,
-			&recurringEndTime, &customerName)
+			&recurringEndTime, &customerName, &specialPricePerHour)
 		if err != nil {
 			return nil, errors.Wrap(err, "fail to scan recurring event:")
 		}
@@ -90,6 +91,10 @@ func (e Event) getRecurringEvents(start, end time.Time, forCustomer int64) (enti
 			newEvent.Customer = &entity.Customer{
 				ID:   customerID.Int64,
 				Name: customerName.String,
+			}
+			if specialPricePerHour.Valid {
+				temp := int(specialPricePerHour.Int32)
+				newEvent.Customer.SpecialPricePerHour = &temp
 			}
 		}
 		if price.Valid {
