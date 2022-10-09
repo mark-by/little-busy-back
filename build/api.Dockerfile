@@ -1,7 +1,7 @@
 FROM golang:1.19.1 AS build
 ENV CGO_ENABLED 0
 ENV GO111MODULE on
-ENV GOFLAGS -mod=vendor
+#ENV GOFLAGS -mod=vendor
 ARG BUILD_REF
 ARG IMAGE
 RUN mkdir /build
