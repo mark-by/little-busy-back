@@ -44,7 +44,7 @@ func (s Scheduler) Start() {
 
 func (s Scheduler) SaveEventsToRecords() {
 	s.logger.Info("start save records")
-	searchDate := time.Now().AddDate(0, 0, -1)
+	searchDate := time.Now()
 	s.logger.Info("search date: ", searchDate.Format(time.RFC3339))
 	events, err := s.eventsApp.GetForDay(searchDate.Year(), int(searchDate.Month()), searchDate.Day())
 	if err != nil {
