@@ -4,6 +4,7 @@ import (
 	"github.com/mark-by/little-busy-back/auth/internal/domain/entity"
 	"github.com/mark-by/little-busy-back/auth/internal/domain/repository"
 	"github.com/pkg/errors"
+	"time"
 )
 
 type SessionI interface {
@@ -32,9 +33,9 @@ func (s Session) Create(userID int) (*entity.Session, error) {
 	value := s.createSessionValue(userID)
 
 	newSession := &entity.Session{
-		ID:     value,
-		UserID: userID,
-		//Expiration: time.Now().Add(30 * 24 * time.Hour),
+		ID:         value,
+		UserID:     userID,
+		Expiration: time.Now().AddDate(1, 0, 0),
 	}
 
 	err := s.repo.Create(newSession)
