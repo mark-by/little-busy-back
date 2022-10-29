@@ -16,6 +16,7 @@ type RecordsI interface {
 	GetStatForYear(year int) ([]entity.Value, error)
 	GetProfit(start, end time.Time) (float32, error)
 	SaveFromEvents(events []entity.Event) error
+	Update(recordID int64, value float32) error
 }
 
 type Records struct {
@@ -79,6 +80,10 @@ func (r Records) calculatePriceForEvent(event entity.Event, defaultPricePerHour 
 
 func (r Records) Delete(recordID int64) error {
 	return r.records.Delete(recordID)
+}
+
+func (r Records) Update(recordID int64, value float32) error {
+	return r.records.Update(recordID, value)
 }
 
 func (r Records) GetStatForMonth(year, month int) ([]entity.Value, error) {

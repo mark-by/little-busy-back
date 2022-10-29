@@ -64,6 +64,16 @@ func (r Record) Delete(recordID int64) error {
 	return nil
 }
 
+func (r Record) Update(recordID int64, value float32) error {
+	_, err := r.db.Exec(context.Background(),
+		`update records set value = $1 where id = $2`, value, recordID)
+	if err != nil {
+		return errors.Wrap(err, "fail to update record")
+	}
+
+	return nil
+}
+
 func (r Record) GetRecordsForDay(date time.Time) ([]entity.Record, error) {
 	var records []entity.Record
 	err := pgxscan.Select(context.Background(), r.db, &records,

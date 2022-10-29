@@ -14,4 +14,5 @@ type Record interface {
 	GetProfit(start, end time.Time) (float32, error)
 	SaveBatch(records []entity.Record) error
 	Select(since int64, limit int) ([]entity.Record, error)
+	Update(recordID int64, value float32) error
 }

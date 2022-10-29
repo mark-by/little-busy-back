@@ -91,6 +91,7 @@ func (s Server) Start() error {
 	e.GET("/api/records", s.getRecords, s.authMiddleware)
 	e.POST("/api/records", s.createRecord, s.authMiddleware)
 	e.DELETE("/api/records/:id", s.deleteRecord, s.authMiddleware)
+	e.PATCH("/api/records/:id", s.updateRecord, s.authMiddleware)
 	e.GET("/api/records/stat", s.getStat, s.authMiddleware)
 	e.POST("/api/records/saveEvents", s.saveEventsToRecords, s.authMiddleware)
 

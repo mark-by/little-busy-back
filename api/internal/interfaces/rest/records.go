@@ -153,3 +153,27 @@ func (s Server) saveEventsToRecords(c echo.Context) error {
 
 	return c.NoContent(http.StatusOK)
 }
+
+type updatePayload struct {
+	Value float32 `json:"value"`
+}
+
+func (s Server) updateRecord(c echo.Context) error {
+	recordID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest)
+	}
+
+	var payload updatePayload
+	err = s.bindAndValidate(c, &payload)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	err = s.recordsApp.Update(int64(recordID), payload.Value)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "fail to update error")
+	}
+
+	return c.NoContent(http.StatusOK)
+}
