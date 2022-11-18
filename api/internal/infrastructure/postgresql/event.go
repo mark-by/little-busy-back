@@ -133,7 +133,7 @@ func (e Event) GetForDay(year, month, day int) ([]entity.Event, error) {
 	var events entity.Events
 	err := pgxscan.Select(context.Background(), e.db, &events,
 		`select e.id, customer_id, e.start_time, e.end_time, description, price,
-        c.id as "customer.id", c.name as "customer.name", c.special_price_per_hour "customer.special_price_per_hour" 
+        c.id as "customer.id", c.name as "customer.name", c.special_price_per_hour "customer.special_price_per_hour", c.tel "customer.tel" 
 		from events as e 
 		left join recurring_events as re on e.id = re.event_id 
 		join customers as c on customer_id = c.id

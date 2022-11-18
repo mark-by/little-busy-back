@@ -1,12 +1,6 @@
 version: '3.9'
 services:
-  redis:
-    image: redis
-    container_name: redis
-    restart: always
-    networks:
-      - littlebusy
-
+#  API NODE
   postgres:
     image: postgres
     container_name: postgres
@@ -17,7 +11,7 @@ services:
     volumes:
       - ${PWD}/volumes/pgdata:/var/lib/postgresql/data
     networks:
-      - littlebusy
+      - api_db
 
   api:
     container_name: api
@@ -26,20 +20,28 @@ services:
       dockerfile: build/api.Dockerfile
       args:
         - IMAGE=api
-#    image: api
-#    command: ["-f", "/app/config.yml"]
     environment:
       - SECRET=159357
       - ADDRESS=:8000
       - DB_PASSWORD=123
       - MIGRATIONS=/migrations
+      - GRPC_PORT=8553
     volumes:
       - ${PWD}/api/internal/infrastructure/postgresql/migrations:/migrations
     networks:
-      - littlebusy
+      - api_db
+      - little_busy
       - frontend
     depends_on:
       - postgres
+
+# AUTH NODE
+  redis:
+    image: redis
+    container_name: redis
+    restart: always
+    networks:
+      - auth_db
 
   auth:
     container_name: auth
@@ -48,13 +50,13 @@ services:
       dockerfile: build/auth.Dockerfile
       args:
         - IMAGE=auth
-#    image: auth
-#    command: ["-f", "/app/config.yml"]
     networks:
-      - littlebusy
+      - auth_db
+      - little_busy
     depends_on:
       - redis
 
+# FRONT NODE
   frontend:
     container_name: frontend
     image: nginx:latest
@@ -66,14 +68,57 @@ services:
       - 443:443
       - 80:80
     networks:
-      - littlebusy
+      - little_busy
       - frontend
     depends_on:
       - auth
       - api
 
+# BOT NODE
+  postgres_bot:
+    image: postgres
+    container_name: postgres_bot
+    restart: always
+    environment:
+      - PGDATA=/var/lib/postgresql/data/pgdata
+      - POSTGRES_PASSWORD=5535
+    volumes:
+      - ${PWD}/volumes/bot_pgdata:/var/lib/postgresql/data
+    networks:
+      - bot_db
+
+  bot:
+    container_name: bot
+    build:
+      context: .
+      dockerfile: build/bot.Dockerfile
+      args:
+        - IMAGE=bot
+    environment:
+      - SECRET=bot_secret
+      - CRM_ADDRESS=api:8553
+      - DB_PASSWORD=5535
+      - MIGRATIONS=/migrations
+    volumes:
+      - ${PWD}/bot/internal/storage/postgres/migrations:/migrations
+    networks:
+      - little_busy
+      - bot
+      - bot_db
+    depends_on:
+      - postgres_bot
+      - api
+
 networks:
-  littlebusy:
-    name: littlebusy
+  api_db:
+    name: api_db
+  auth_db:
+    name: auth_db
+  little_busy:
+    name: little_busy
   frontend:
     name: frontend
+  bot_db:
+    name: bot_db
+  bot:
+    name: bot

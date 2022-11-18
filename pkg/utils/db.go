@@ -15,6 +15,7 @@ import (
 type Options struct {
 	MigrationsDir string
 	User          string
+	Database      string
 	Password      string
 	Host          string
 	Port          string

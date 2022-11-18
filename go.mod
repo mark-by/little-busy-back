@@ -7,6 +7,7 @@ require (
 	github.com/georgysavva/scany v0.3.0
 	github.com/go-playground/form v3.1.4+incompatible
 	github.com/go-playground/validator/v10 v10.10.1
+	github.com/go-telegram-bot-api/telegram-bot-api/v5 v5.5.1
 	github.com/golang-migrate/migrate/v4 v4.15.1
 	github.com/gomodule/redigo v1.8.8
 	github.com/google/uuid v1.3.0
@@ -14,6 +15,7 @@ require (
 	github.com/jackc/pgx v3.6.2+incompatible
 	github.com/jackc/pgx/v4 v4.15.0
 	github.com/labstack/echo/v4 v4.7.2
+	github.com/nleeper/goment v1.4.5-0.20221117172615-95a319c1f6e1
 	github.com/pkg/errors v0.9.1
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/stretchr/testify v1.7.0
@@ -22,7 +24,6 @@ require (
 	golang.org/x/exp v0.0.0-20220414153411-bcd21879b8fd
 	google.golang.org/grpc v1.44.0
 	google.golang.org/protobuf v1.27.1
-	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 )
 
 require (
@@ -53,6 +54,7 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rogpeppe/go-internal v1.8.0 // indirect
 	github.com/shopspring/decimal v1.3.1 // indirect
+	github.com/tkuchiki/go-timezone v0.2.2 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.1 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
@@ -63,4 +65,5 @@ require (
 	golang.org/x/time v0.0.0-20201208040808-7e3f01d25324 // indirect
 	google.golang.org/genproto v0.0.0-20211013025323-ce878158c4d4 // indirect
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
+	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 )

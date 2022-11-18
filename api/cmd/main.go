@@ -9,24 +9,26 @@ import (
 	"github.com/mark-by/little-busy-back/api/internal/config"
 	"github.com/mark-by/little-busy-back/api/internal/infrastructure/microservices"
 	"github.com/mark-by/little-busy-back/api/internal/infrastructure/postgresql"
+	"github.com/mark-by/little-busy-back/api/internal/interfaces/grpc"
 	"github.com/mark-by/little-busy-back/api/internal/interfaces/rest"
 	"github.com/mark-by/little-busy-back/pkg/utils"
 	"go.uber.org/zap"
 	"log"
+	"os"
 	"strconv"
 	"time"
 )
 
 func initDB(logger *zap.SugaredLogger, sysConfig *config.Config) *pgxpool.Pool {
 	config := pgconn.Config{
-		Host: "postgres",
-		Port: 5432,
+		Host:     "postgres",
+		Port:     5432,
 		Database: "postgres",
 		User:     "postgres",
 		Password: "123",
 	}
 
-	migrateFunc := func () {
+	migrateFunc := func() {
 		utils.Migrate(&utils.Options{
 			MigrationsDir: sysConfig.Migrations,
 			User:          config.User,
@@ -39,7 +41,7 @@ func initDB(logger *zap.SugaredLogger, sysConfig *config.Config) *pgxpool.Pool {
 		})
 	}
 
-	utils.Retry(migrateFunc, 4, 1 * time.Second)
+	utils.Retry(migrateFunc, 4, 1*time.Second)
 
 	pool, err := pgxpool.Connect(context.Background(),
 		fmt.Sprintf("postgres://%s:%s@%s:%v/%s",
@@ -83,14 +85,28 @@ func main() {
 
 	application.NewScheduler(recordsApp, eventsApp, logger.Sugar()).Start()
 
-	log.Print(rest.NewServer(&rest.ServerOptions{
-		UserApp:     userApp,
-		AuthApp:     authApp,
-		CustomerApp: customerApp,
-		EventsApp:   eventsApp,
-		RecordsApp:  recordsApp,
-		SettingsApp: settingsApp,
-		Logger:      logger.Sugar(),
-		Config:      config,
-	}).Start())
+	go func() {
+		logger.Info(fmt.Sprintf("start grpc server on %v", os.Getenv("GRPC_PORT")))
+		grpc.NewCRMServer(
+			grpc.NewCRMService(
+				customerApp,
+				eventsApp,
+				logger.Sugar().With("crm grpc"))).Start(&grpc.Options{
+			Host: "0.0.0.0",
+			Port: os.Getenv("GRPC_PORT"),
+		})
+	}()
+
+	logger.Info(fmt.Sprintf("start rest server on %v", config.Address))
+	logger.Error(fmt.Sprintf("fail rest server %s",
+		rest.NewServer(&rest.ServerOptions{
+			UserApp:     userApp,
+			AuthApp:     authApp,
+			CustomerApp: customerApp,
+			EventsApp:   eventsApp,
+			RecordsApp:  recordsApp,
+			SettingsApp: settingsApp,
+			Logger:      logger.Sugar(),
+			Config:      config,
+		}).Start()))
 }
