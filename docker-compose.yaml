@@ -1,6 +1,27 @@
 version: '3.9'
 services:
-#  API NODE
+  # AUTH NODE
+  redis:
+    image: redis
+    container_name: redis
+    restart: always
+    networks:
+      - auth_db
+
+  auth:
+    container_name: auth
+    build:
+      context: .
+      dockerfile: build/auth.Dockerfile
+      args:
+        - IMAGE=auth
+    networks:
+      - auth_db
+      - little_busy
+    depends_on:
+      - redis
+
+  #  API NODE
   postgres:
     image: postgres
     container_name: postgres
@@ -34,27 +55,6 @@ services:
       - frontend
     depends_on:
       - postgres
-
-# AUTH NODE
-  redis:
-    image: redis
-    container_name: redis
-    restart: always
-    networks:
-      - auth_db
-
-  auth:
-    container_name: auth
-    build:
-      context: .
-      dockerfile: build/auth.Dockerfile
-      args:
-        - IMAGE=auth
-    networks:
-      - auth_db
-      - little_busy
-    depends_on:
-      - redis
 
 # FRONT NODE
   frontend:
