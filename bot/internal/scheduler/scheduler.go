@@ -53,7 +53,7 @@ func (s Scheduler) notify() {
 	for _, event := range events {
 		user, err := s.storage.UserByTel(event.ClientTel)
 		if err != nil {
-			s.logger.With("tel", event.ClientTel).Error("fail to get user by tel: ", err)
+			// customer does not exist in bot storage
 			continue
 		}
 		if user == nil || !user.NotificationIsEnabled {
@@ -64,7 +64,7 @@ func (s Scheduler) notify() {
 			"Добрый вечер!\n"+
 				"Завтра в %s у вас назначен сеанс", event.StartTime.Format("15:04"))))
 		if err != nil {
-			s.logger.With("chat", user.ChatID).Error("fail to send message: ", err)
+			s.logger.With("chat", user.ChatID).Error("fail to send notify message: ", err)
 		}
 	}
 }
